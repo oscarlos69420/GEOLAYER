@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>LiDAR-kaart Vlaanderen</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root { --bg:#14181c; --panel:#1d2329; --line:#2e363e; --txt:#e8ecef; --mut:#93a0ab; --acc:#e0a526; --danger:#e5484d; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--txt);
+    font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  #map { position:absolute; inset:0; background:#2a2f33; }
+  .leaflet-control-attribution { font-size:10px; background:rgba(20,24,28,.75)!important; color:#aab4bd; }
+  .leaflet-control-attribution a { color:#cfd7dd; }
+
+  .fab-col { position:absolute; right:12px; bottom:28px; z-index:1000; display:flex; flex-direction:column; gap:10px; }
+  .fab { width:52px; height:52px; border-radius:50%; border:1px solid var(--line); background:var(--panel); color:var(--txt);
+    font-size:22px; display:grid; place-items:center; box-shadow:0 4px 14px rgba(0,0,0,.45); cursor:pointer; padding:0; }
+  .fab.on { background:var(--acc); color:#1a1300; border-color:var(--acc); }
+  .fab svg { width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+
+  #cross { position:absolute; left:50%; top:50%; width:26px; height:26px; margin:-13px 0 0 -13px; z-index:900; pointer-events:none; }
+  #cross:before,#cross:after { content:""; position:absolute; background:#fff; box-shadow:0 0 0 1px rgba(0,0,0,.6); }
+  #cross:before { left:12px; top:0; width:2px; height:26px; }
+  #cross:after { top:12px; left:0; height:2px; width:26px; }
+
+  #coords { position:absolute; left:12px; bottom:28px; z-index:1000; background:rgba(20,24,28,.85); border:1px solid var(--line);
+    border-radius:8px; padding:6px 10px; font:12px/1.3 ui-monospace,Menlo,Consolas,monospace; color:#cfd7dd; }
+
+  .sheet { position:absolute; left:0; right:0; bottom:0; z-index:1100; background:var(--panel); border-top:1px solid var(--line);
+    border-radius:16px 16px 0 0; max-height:78%; overflow:auto; padding:14px 16px 26px; transform:translateY(105%);
+    transition:transform .22s ease; box-shadow:0 -8px 30px rgba(0,0,0,.5); }
+  .sheet.open { transform:none; }
+  @media (min-width:720px) { .sheet { left:auto; right:76px; bottom:24px; width:360px; border-radius:16px; border:1px solid var(--line); } }
+  .sheet h2 { margin:0 0 4px; font-size:17px; display:flex; justify-content:space-between; align-items:center; }
+  .sheet h3 { margin:16px 0 6px; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--mut); font-weight:600; }
+  .x { background:none; border:0; color:var(--mut); font-size:24px; line-height:1; cursor:pointer; padding:4px 8px; }
+  .seg { display:flex; flex-wrap:wrap; gap:6px; }
+  .seg button { flex:1 1 auto; min-width:72px; padding:9px 10px; border-radius:9px; border:1px solid var(--line); background:#161b20;
+    color:var(--txt); font:inherit; cursor:pointer; }
+  .seg button.on { background:var(--acc); border-color:var(--acc); color:#1a1300; font-weight:600; }
+  .row { display:flex; align-items:center; gap:10px; margin-top:8px; color:var(--mut); font-size:13px; }
+  .row input[type=range] { flex:1; accent-color:var(--acc); }
+  label.chk { display:flex; align-items:center; gap:10px; padding:8px 0; }
+  label.chk input { width:20px; height:20px; accent-color:var(--danger); flex:none; }
+  label.chk.erf input { accent-color:var(--acc); }
+  .feat { padding:10px 0; border-bottom:1px solid var(--line); }
+  .feat b { display:block; }
+  .feat small { color:var(--mut); display:block; }
+  .feat a { color:var(--acc); }
+  .note { color:var(--mut); font-size:12.5px; margin:6px 0 0; }
+  .swatch { display:inline-block; width:14px; height:14px; border:2px solid var(--danger); background:rgba(229,72,77,.3); border-radius:3px; vertical-align:-2px; }
+
+  input[type=text], textarea { width:100%; padding:10px; border-radius:9px; border:1px solid var(--line); background:#12161a;
+    color:var(--txt); font:inherit; margin-top:8px; }
+  textarea { min-height:64px; resize:vertical; }
+  .btn { padding:10px 14px; border-radius:9px; border:1px solid var(--line); background:#161b20; color:var(--txt); font:inherit; cursor:pointer; }
+  .btn.pri { background:var(--acc); border-color:var(--acc); color:#1a1300; font-weight:600; }
+  .btn.dng { color:var(--danger); }
+  .btns { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+  .wp { display:flex; gap:10px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--line); cursor:pointer; }
+  .wp b { display:block; }
+  .wp small { color:var(--mut); }
+  .wp .del { margin-left:auto; background:none; border:0; color:var(--mut); font-size:18px; cursor:pointer; padding:2px 6px; }
+  .pin { width:16px; height:16px; border-radius:50% 50% 50% 0; background:var(--acc); border:2px solid #1a1300; transform:rotate(-45deg); }
+  .me { width:16px; height:16px; border-radius:50%; background:#2f8cff; border:3px solid #fff; box-shadow:0 0 0 2px rgba(47,140,255,.4); }
+  #toast { position:absolute; left:50%; top:14px; transform:translateX(-50%); z-index:1200; background:rgba(20,24,28,.95);
+    border:1px solid var(--line); border-radius:10px; padding:9px 14px; font-size:13.5px; max-width:88%; display:none; text-align:center; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="cross"></div>
+<div id="coords">–</div>
+<div id="toast"></div>
+
+<div class="fab-col">
+  <button class="fab" id="bLayers" title="Kaartlagen" aria-label="Kaartlagen">
+    <svg viewBox="0 0 24 24"><path d="M12 3 2 8l10 5 10-5-10-5z"/><path d="m2 13 10 5 10-5"/><path d="m2 17.5 10 5 10-5"/></svg></button>
+  <button class="fab" id="bList" title="Mijn punten" aria-label="Mijn punten">
+    <svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/></svg></button>
+  <button class="fab" id="bAdd" title="Punt toevoegen op het kruis" aria-label="Punt toevoegen">
+    <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+  <button class="fab" id="bGps" title="Mijn locatie" aria-label="Mijn locatie">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></button>
+</div>
+
+<!-- Lagen -->
+<div class="sheet" id="sLayers">
+  <h2>Kaartlagen <button class="x" data-close>&times;</button></h2>
+
+  <h3>Ondergrond</h3>
+  <div class="seg" id="segBase">
+    <button data-v="osm">Kaart</button><button data-v="ortho">Luchtfoto</button><button data-v="none">Geen</button>
+  </div>
+
+  <h3>LiDAR-reliëf (DHMV II, 25 cm)</h3>
+  <div class="seg" id="segRelief">
+    <button data-v="hill">Hillshade</button><button data-v="svf">Skyview</button><button data-v="none">Uit</button>
+  </div>
+  <div class="row">Dekking <input type="range" id="opRelief" min="0" max="100"></div>
+  <p class="note">Skyview toont greppels, wallen en kuilen vaak scherper dan hillshade.</p>
+
+  <h3>Historische kaart</h3>
+  <div class="seg" id="segHist">
+    <button data-v="none">Uit</button><button data-v="frickx">Fricx 1712</button><button data-v="ferraris">Ferraris 1777</button>
+    <button data-v="abw">Buurtwegen 1840</button>
+    <button data-v="vandermaelen">Vandermaelen 1850</button><button data-v="popp">Popp</button>
+  </div>
+  <div class="row">Dekking <input type="range" id="opHist" min="0" max="100"></div>
+
+  <p class="note">Ferraris toont dorpen, kerken, hoeves, molens en wegen van rond 1777. De Atlas der Buurtwegen toont elk oud pad en elke voetweg.</p>
+
+  <h3>Erfgoed en vindplaatsen</h3>
+  <label class="chk erf"><input type="checkbox" data-erf="arEl"> <span>Archeologische vindplaatsen</span></label>
+  <label class="chk erf"><input type="checkbox" data-erf="arGeh"> <span>Archeologische zones (o.a. oude dorps- en stadskernen)</span></label>
+  <label class="chk erf"><input type="checkbox" data-erf="bkEl"> <span>Bouwkundig erfgoed (kerken, hoeves, molens, kastelen)</span></label>
+  <p class="note">Tik op een vlak of punt op de kaart voor naam en fiche. Bron: Inventaris Onroerend Erfgoed.</p>
+
+  <h3>Verboden zones</h3>
+  <label class="chk"><input type="checkbox" id="chkArch"> <span><span class="swatch"></span> Beschermde archeologische sites</span></label>
+  <p class="note">Hier mag je nooit zoeken met een detector, ook niet met toestemming van de eigenaar. Bron: Onroerend Erfgoed. Controleer bij twijfel het officiële geoportaal.</p>
+</div>
+
+<!-- Info -->
+<div class="sheet" id="sInfo">
+  <h2>Op deze plek <button class="x" data-close>&times;</button></h2>
+  <div id="infoBody"></div>
+</div>
+
+<!-- Punt bewerken -->
+<div class="sheet" id="sEdit">
+  <h2><span id="editTitle">Nieuw punt</span> <button class="x" data-close>&times;</button></h2>
+  <input type="text" id="wpName" placeholder="Naam (bv. oude hoeve, muntvondst)">
+  <textarea id="wpNote" placeholder="Notitie"></textarea>
+  <p class="note" id="wpPos"></p>
+  <div class="btns"><button class="btn pri" id="wpSave">Opslaan</button><button class="btn dng" id="wpDel">Verwijderen</button></div>
+</div>
+
+<!-- Lijst -->
+<div class="sheet" id="sList">
+  <h2>Mijn punten <button class="x" data-close>&times;</button></h2>
+  <div id="wpList"></div>
+  <div class="btns"><button class="btn" id="bGpx">Exporteer GPX</button></div>
+  <p class="note">Punten worden alleen in deze browser op dit toestel bewaard. Exporteer af en toe een GPX als back-up.</p>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---------- opslag ----------
+  var store = {
+    get: function (k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+  var state = store.get('lk.state', null) || {
+    base: 'ortho', relief: 'hill', hist: 'none', arch: true, opRelief: 75, opHist: 60,
+    lat: 51.05, lng: 4.2, z: 10
+  };
+  var waypoints = store.get('lk.wp', []);
+  function saveState() { store.set('lk.state', state); }
+  function saveWp() { store.set('lk.wp', waypoints); }
+
+  // ---------- kaart ----------
+  var map = L.map('map', { zoomControl: false, maxZoom: 21, minZoom: 7 }).setView([state.lat, state.lng], state.z);
+  L.control.scale({ imperial: false, position: 'topleft' }).addTo(map);
+
+  ['base', 'hist', 'relief', 'erf', 'zones'].forEach(function (n, i) {
+    map.createPane(n).style.zIndex = 200 + i * 10;
+  });
+
+  var DV = '&copy; <a href="https://www.vlaanderen.be/digitaal-vlaanderen">Digitaal Vlaanderen</a>';
+  function wmts(service, layer, pane) {
+    return L.tileLayer('https://geo.api.vlaanderen.be/' + service + '/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0' +
+      '&LAYER=' + layer + '&STYLE=&FORMAT=image/png&TILEMATRIXSET=GoogleMapsVL&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',
+      { pane: pane, maxZoom: 21, maxNativeZoom: 20, attribution: DV });
+  }
+
+  var layers = {
+    base: {
+      osm: L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        { pane: 'base', maxZoom: 21, maxNativeZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }),
+      ortho: wmts('OMWRGBMRVL', 'omwrgbmrvl', 'base')
+    },
+    relief: {
+      hill: wmts('DHMV', 'DHMV_II_HILL_25cm', 'relief'),
+      svf: wmts('DHMV', 'DHMV_II_SVF_25cm', 'relief')
+    },
+    hist: {
+      frickx: wmts('HISTCART', 'frickx', 'hist'),
+      ferraris: wmts('HISTCART', 'ferraris', 'hist'),
+      abw: wmts('HISTCART', 'abw', 'hist'),
+      vandermaelen: wmts('HISTCART', 'vandermaelen', 'hist'),
+      popp: wmts('HISTCART', 'popp', 'hist')
+    }
+  };
+  var MERC = 'https://www.mercator.vlaanderen.be/raadpleegdienstenmercatorpubliek/ows';
+  var OE = '&copy; <a href="https://geo.onroerenderfgoed.be">Onroerend Erfgoed</a>';
+  var erfNames = { arEl: 'lu:lu_wet_ar_el_pub', arGeh: 'lu:lu_wet_ar_geh_pub', bkEl: 'lu:lu_wet_bk_el_pub' };
+  var erf = {};
+  Object.keys(erfNames).forEach(function (k) {
+    erf[k] = L.tileLayer.wms(MERC, { layers: erfNames[k], format: 'image/png', transparent: true, version: '1.3.0',
+      pane: 'erf', maxZoom: 21, opacity: 0.8, attribution: OE });
+  });
+  if (!state.erf) state.erf = {};
+  var arch = L.tileLayer.wms(MERC, {
+    layers: 'ps:ps_bes_arch_site', format: 'image/png', transparent: true, version: '1.3.0',
+    pane: 'zones', maxZoom: 21, opacity: 0.75,
+    attribution: '&copy; <a href="https://geo.onroerenderfgoed.be">Onroerend Erfgoed</a>'
+  });
+
+  function apply(group) {
+    Object.keys(layers[group]).forEach(function (k) {
+      var l = layers[group][k];
+      if (k === state[group]) { if (!map.hasLayer(l)) l.addTo(map); } else if (map.hasLayer(l)) map.removeLayer(l);
+    });
+    if (group === 'relief') Object.keys(layers.relief).forEach(function (k) { layers.relief[k].setOpacity(state.opRelief / 100); });
+    if (group === 'hist') Object.keys(layers.hist).forEach(function (k) { layers.hist[k].setOpacity(state.opHist / 100); });
+  }
+  function applyArch() { if (state.arch) arch.addTo(map); else map.removeLayer(arch); }
+
+  // ---------- UI: lagen ----------
+  function $(id) { return document.getElementById(id); }
+  function seg(id, group) {
+    var el = $(id);
+    function paint() {
+      Array.prototype.forEach.call(el.children, function (b) { b.classList.toggle('on', b.dataset.v === state[group]); });
+    }
+    el.addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      state[group] = b.dataset.v; paint(); apply(group); saveState();
+    });
+    paint(); apply(group);
+  }
+  seg('segBase', 'base'); seg('segRelief', 'relief'); seg('segHist', 'hist');
+
+  $('opRelief').value = state.opRelief; $('opHist').value = state.opHist;
+  $('opRelief').addEventListener('input', function () { state.opRelief = +this.value; apply('relief'); saveState(); });
+  $('opHist').addEventListener('input', function () { state.opHist = +this.value; apply('hist'); saveState(); });
+  $('chkArch').checked = state.arch; applyArch();
+  $('chkArch').addEventListener('change', function () { state.arch = this.checked; applyArch(); saveState(); });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-erf]'), function (c) {
+    var k = c.dataset.erf;
+    c.checked = !!state.erf[k];
+    if (c.checked) erf[k].addTo(map);
+    c.addEventListener('change', function () {
+      state.erf[k] = c.checked;
+      if (c.checked) erf[k].addTo(map); else map.removeLayer(erf[k]);
+      saveState();
+    });
+  });
+
+  // ---------- sheets ----------
+  function openSheet(id) {
+    Array.prototype.forEach.call(document.querySelectorAll('.sheet'), function (s) { s.classList.toggle('open', s.id === id && !s.classList.contains('open')); });
+  }
+  function closeSheets() { Array.prototype.forEach.call(document.querySelectorAll('.sheet'), function (s) { s.classList.remove('open'); }); }
+  Array.prototype.forEach.call(document.querySelectorAll('[data-close]'), function (b) { b.addEventListener('click', closeSheets); });
+  $('bLayers').addEventListener('click', function () { openSheet('sLayers'); });
+  $('bList').addEventListener('click', function () { renderList(); openSheet('sList'); });
+  map.on('click', function (e) {
+    var wasOpen = !!document.querySelector('.sheet.open');
+    closeSheets();
+    if (!wasOpen) identify(e);
+  });
+
+  // ---------- tik op de kaart: wat ligt hier? ----------
+  function identify(e) {
+    var q = Object.keys(erfNames).filter(function (k) { return state.erf[k]; }).map(function (k) { return erfNames[k]; });
+    if (state.arch) q.push('ps:ps_bes_arch_site');
+    if (!q.length) return;
+    var b = map.getBounds(), sz = map.getSize(), crs = L.CRS.EPSG3857;
+    var sw = crs.project(b.getSouthWest()), ne = crs.project(b.getNorthEast());
+    var url = MERC + '?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetFeatureInfo&CRS=EPSG:3857&STYLES=' +
+      '&LAYERS=' + encodeURIComponent(q.join(',')) + '&QUERY_LAYERS=' + encodeURIComponent(q.join(',')) +
+      '&BBOX=' + [sw.x, sw.y, ne.x, ne.y].join(',') + '&WIDTH=' + sz.x + '&HEIGHT=' + sz.y +
+      '&I=' + Math.round(e.containerPoint.x) + '&J=' + Math.round(e.containerPoint.y) +
+      '&INFO_FORMAT=application/json&FEATURE_COUNT=8';
+    fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+      var fs = (j && j.features) || [];
+      if (!fs.length) return;
+      var html = fs.map(function (f) {
+        var p = f.properties || {}, name = p.naam || p.NAAM || p.titel || 'Zonder naam', link = '', extra = [];
+        Object.keys(p).forEach(function (k) {
+          var v = p[k];
+          if (typeof v !== 'string' || !v) return;
+          if (/^https?:\/\//.test(v)) { if (!link) link = v; return; }
+          if (v !== name && v.length < 140 && extra.length < 4 && !/^(id|uuid|gid)$/i.test(k)) extra.push(v);
+        });
+        var kind = String(f.id || '').indexOf('bes_arch') > -1 ? 'Beschermde archeologische site: niet zoeken' : '';
+        return '<div class="feat"><b>' + esc(name) + '</b>' + (kind ? '<small style="color:var(--danger)">' + kind + '</small>' : '') +
+          (extra.length ? '<small>' + extra.map(esc).join(' · ') + '</small>' : '') +
+          (link ? '<a href="' + esc(link) + '" target="_blank" rel="noopener">Open fiche</a>' : '') + '</div>';
+      }).join('');
+      $('infoBody').innerHTML = html;
+      $('sInfo').classList.add('open');
+    }).catch(function () { toast('Info over deze plek kon niet geladen worden.'); });
+  }
+
+  var toastT;
+  function toast(msg) {
+    var t = $('toast'); t.textContent = msg; t.style.display = 'block';
+    clearTimeout(toastT); toastT = setTimeout(function () { t.style.display = 'none'; }, 4500);
+  }
+
+  // ---------- coördinaten + positie onthouden ----------
+  function fmt(ll) { return ll.lat.toFixed(5) + ', ' + ll.lng.toFixed(5); }
+  function onMove() {
+    var c = map.getCenter();
+    $('coords').textContent = fmt(c) + '  z' + map.getZoom();
+    state.lat = c.lat; state.lng = c.lng; state.z = map.getZoom();
+  }
+  map.on('move', onMove); map.on('moveend', saveState); onMove();
+
+  // ---------- GPS ----------
+  var meMarker = null, meAcc = null, watchId = null, follow = false;
+  function stopGps() {
+    if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+    watchId = null; follow = false; $('bGps').classList.remove('on');
+  }
+  $('bGps').addEventListener('click', function () {
+    if (!navigator.geolocation) { toast('Dit toestel of deze browser ondersteunt geen locatie.'); return; }
+    if (watchId !== null && follow) { stopGps(); return; }
+    follow = true; $('bGps').classList.add('on');
+    if (meMarker) map.setView(meMarker.getLatLng(), Math.max(map.getZoom(), 17));
+    if (watchId !== null) return;
+    watchId = navigator.geolocation.watchPosition(function (p) {
+      var ll = L.latLng(p.coords.latitude, p.coords.longitude);
+      if (!meMarker) {
+        meMarker = L.marker(ll, { icon: L.divIcon({ className: '', html: '<div class="me"></div>', iconSize: [16, 16], iconAnchor: [8, 8] }), interactive: false, zIndexOffset: 1000 }).addTo(map);
+        meAcc = L.circle(ll, { radius: p.coords.accuracy, color: '#2f8cff', weight: 1, fillOpacity: 0.08, interactive: false }).addTo(map);
+        map.setView(ll, Math.max(map.getZoom(), 17));
+      } else {
+        meMarker.setLatLng(ll); meAcc.setLatLng(ll).setRadius(p.coords.accuracy);
+        if (follow) map.panTo(ll);
+      }
+    }, function (err) {
+      stopGps();
+      toast(err.code === 1
+        ? 'Locatie geweigerd. Geef de browser toestemming, en open de kaart via een https-adres (niet als los bestand).'
+        : 'Geen locatie gevonden. Probeer het buiten opnieuw.');
+    }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 });
+  });
+  map.on('dragstart', function () { if (follow) { follow = false; $('bGps').classList.remove('on'); } });
+
+  // ---------- waypoints ----------
+  var wpLayer = L.layerGroup().addTo(map), editing = null;
+  var pinIcon = L.divIcon({ className: '', html: '<div class="pin"></div>', iconSize: [16, 16], iconAnchor: [8, 16] });
+
+  function drawWp() {
+    wpLayer.clearLayers();
+    waypoints.forEach(function (w) {
+      L.marker([w.lat, w.lng], { icon: pinIcon, title: w.name }).addTo(wpLayer)
+        .bindTooltip(w.name || 'Punt', { direction: 'top', offset: [0, -16] })
+        .on('click', function (e) { L.DomEvent.stopPropagation(e); edit(w); });
+    });
+  }
+  function edit(w) {
+    editing = w;
+    $('editTitle').textContent = w.id ? 'Punt bewerken' : 'Nieuw punt';
+    $('wpName').value = w.name || ''; $('wpNote').value = w.note || '';
+    $('wpPos').textContent = fmt({ lat: w.lat, lng: w.lng }) + (w.t ? '  ·  ' + new Date(w.t).toLocaleDateString('nl-BE') : '');
+    $('wpDel').style.display = w.id ? '' : 'none';
+    closeSheets(); $('sEdit').classList.add('open');
+  }
+  $('bAdd').addEventListener('click', function () {
+    var c = map.getCenter();
+    edit({ id: null, lat: c.lat, lng: c.lng, name: '', note: '' });
+  });
+  $('wpSave').addEventListener('click', function () {
+    if (!editing) return;
+    editing.name = $('wpName').value.trim() || 'Punt ' + (waypoints.length + (editing.id ? 0 : 1));
+    editing.note = $('wpNote').value.trim();
+    if (!editing.id) { editing.id = Date.now().toString(36); editing.t = Date.now(); waypoints.push(editing); }
+    saveWp(); drawWp(); closeSheets();
+  });
+  $('wpDel').addEventListener('click', function () {
+    if (!editing || !editing.id) return;
+    waypoints = waypoints.filter(function (w) { return w.id !== editing.id; });
+    saveWp(); drawWp(); closeSheets();
+  });
+
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function renderList() {
+    var el = $('wpList');
+    if (!waypoints.length) { el.innerHTML = '<p class="note">Nog geen punten. Zet het kruis op een plek en tik op +.</p>'; return; }
+    el.innerHTML = '';
+    waypoints.slice().reverse().forEach(function (w) {
+      var d = document.createElement('div'); d.className = 'wp';
+      d.innerHTML = '<div><b>' + esc(w.name) + '</b><small>' + (w.note ? esc(w.note) + '<br>' : '') + fmt({ lat: w.lat, lng: w.lng }) + '</small></div>';
+      d.addEventListener('click', function () { closeSheets(); map.setView([w.lat, w.lng], Math.max(map.getZoom(), 18)); });
+      el.appendChild(d);
+    });
+  }
+  $('bGpx').addEventListener('click', function () {
+    if (!waypoints.length) { toast('Geen punten om te exporteren.'); return; }
+    var gpx = '<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="LiDAR-kaart Vlaanderen" xmlns="http://www.topografix.com/GPX/1/1">\n' +
+      waypoints.map(function (w) {
+        return '  <wpt lat="' + w.lat + '" lon="' + w.lng + '"><name>' + esc(w.name) + '</name>' +
+          (w.note ? '<desc>' + esc(w.note) + '</desc>' : '') + (w.t ? '<time>' + new Date(w.t).toISOString() + '</time>' : '') + '</wpt>';
+      }).join('\n') + '\n</gpx>\n';
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([gpx], { type: 'application/gpx+xml' }));
+    a.download = 'punten-' + new Date().toISOString().slice(0, 10) + '.gpx';
+    document.body.appendChild(a); a.click(); a.remove();
+  });
+
+  drawWp();
+})();
+</script>
+</body>
+</html>
