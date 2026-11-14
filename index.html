@@ -46,6 +46,7 @@
   label.chk { display:flex; align-items:center; gap:10px; padding:8px 0; }
   label.chk input { width:20px; height:20px; accent-color:var(--danger); flex:none; }
   label.chk.erf input { accent-color:var(--acc); }
+  label.chk.rom input { accent-color:#c08bff; }
   .feat { padding:10px 0; border-bottom:1px solid var(--line); }
   .feat b { display:block; }
   .feat small { color:var(--mut); display:block; }
@@ -119,6 +120,11 @@
 
   <p class="note">Ferraris toont dorpen, kerken, hoeves, molens en wegen van rond 1777. De Atlas der Buurtwegen toont elk oud pad en elke voetweg.</p>
 
+  <h3>Romeinse tijd</h3>
+  <label class="chk rom"><input type="checkbox" id="chkRom"> <span>Romeinse wegen, villa's en nederzettingen</span></label>
+  <p class="note"><span style="color:#c08bff">▬</span> weg &nbsp; <span style="color:#c08bff">◯</span> zone rond een bekende site. De zones zijn indicatief: ze tonen waar iets ligt en hoe groot zo'n site ongeveer was, niet de opgegraven omtrek. Bron: vici.org en eigen opzoekwerk voor Bornem.</p>
+  <p class="note" id="romNote"></p>
+
   <h3>Kanshebbers</h3>
   <label class="chk erf"><input type="checkbox" id="chkTips"> <span><span class="star">★</span> Plekken om te onderzoeken</span></label>
   <p class="note"><span style="color:#ff5a5f">★</span> rood: hier is al iets gevonden. <span class="star">★</span> geel: historische plek uit bronnen. <span style="color:#3ddc6a">★</span> groen: uit het kaartbeeld (LiDAR en Ferraris).</p>
@@ -179,7 +185,7 @@
   var map = L.map('map', { zoomControl: false, maxZoom: 21, minZoom: 7 }).setView([state.lat, state.lng], state.z);
   L.control.scale({ imperial: false, position: 'topleft' }).addTo(map);
 
-  ['base', 'hist', 'relief', 'labels', 'erf', 'zones'].forEach(function (n, i) {
+  ['base', 'hist', 'relief', 'labels', 'erf', 'rom', 'zones'].forEach(function (n, i) {
     map.createPane(n).style.zIndex = 200 + i * 10;
   });
 
@@ -441,6 +447,74 @@
 
   drawWp();
 
+  // ---------- Romeinse laag (vici.org + eigen plekken) ----------
+  var ROM = '#c08bff', romLayer = L.layerGroup(), romSeen = {}, romBusy = false, romOwn = [];
+  var KIND = { villa: ['Villa', 150], rural: ['Landelijke nederzetting', 150], vicus: ['Dorp (vicus)', 400], city: ['Stad', 800],
+    settlement: ['Nederzetting', 300], fort: ['Fort', 200], castellum: ['Fort', 200], camp: ['Legerkamp', 300], temple: ['Heiligdom', 80],
+    shrine: ['Heiligdom', 80], graves: ['Grafveld', 80], tumulus: ['Grafheuvel', 40], bridge: ['Brug', 0], road: ['Weg', 0],
+    milestone: ['Mijlpaal', 0], watchtower: ['Wachttoren', 40], industry: ['Werkplaats', 100], mine: ['Mijn', 100], port: ['Haven', 150],
+    building: ['Gebouw', 60], bath: ['Badhuis', 60], museum: ['Museum', 0], object: ['Vondst', 0], observation: ['Waarneming', 0] };
+  function romInfo(title, kind, text, link) {
+    closeSheets();
+    $('infoBody').innerHTML = '<div class="feat"><b>' + esc(title || 'Romeinse site') + '</b>' +
+      (kind ? '<small style="color:' + ROM + '">' + esc(kind) + '</small>' : '') +
+      (text ? '<small>' + esc(text) + '</small>' : '') +
+      (link ? '<a href="' + esc(link) + '" target="_blank" rel="noopener">Meer info</a>' : '') + '</div>';
+    $('sInfo').classList.add('open');
+  }
+  function romZone(ll, radius, onClick) {
+    if (radius > 0) L.circle(ll, { pane: 'rom', radius: radius, color: ROM, weight: 2, dashArray: '6 5', fillColor: ROM, fillOpacity: 0.18 })
+      .addTo(romLayer).on('click', function (e) { L.DomEvent.stopPropagation(e); onClick(); });
+    L.circleMarker(ll, { pane: 'rom', radius: 5, color: '#1a1300', weight: 1, fillColor: ROM, fillOpacity: 1 })
+      .addTo(romLayer).on('click', function (e) { L.DomEvent.stopPropagation(e); onClick(); });
+  }
+  function romAdd(f) {
+    var p = f.properties || {}, g = f.geometry; if (!g) return;
+    var id = p.id || f.id || JSON.stringify(g.coordinates).slice(0, 60); if (romSeen[id]) return; romSeen[id] = 1;
+    var kindRaw = String(p.kind || p.type || '').toLowerCase(), k = KIND[kindRaw] || [kindRaw, 0];
+    if (kindRaw === 'museum') return;
+    var title = p.title || p.name || k[0], text = p.summary || p.description || '';
+    var link = p.url || (p.id ? 'https://vici.org/vici/' + p.id + '/' : '');
+    var show = function () { romInfo(title, k[0], String(text).replace(/<[^>]+>/g, ''), link); };
+    if (g.type === 'Point') romZone([g.coordinates[1], g.coordinates[0]], k[1], show);
+    else if (g.type === 'LineString' || g.type === 'MultiLineString') {
+      var lines = g.type === 'LineString' ? [g.coordinates] : g.coordinates;
+      lines.forEach(function (c) {
+        L.polyline(c.map(function (x) { return [x[1], x[0]]; }), { pane: 'rom', color: ROM, weight: 4, opacity: 0.9 })
+          .addTo(romLayer).on('click', function (e) { L.DomEvent.stopPropagation(e); show(); });
+      });
+    } else if (g.type === 'Polygon' || g.type === 'MultiPolygon') {
+      L.geoJSON(f, { pane: 'rom', style: { color: ROM, weight: 2, fillColor: ROM, fillOpacity: 0.25 } })
+        .addTo(romLayer).on('click', function (e) { L.DomEvent.stopPropagation(e); show(); });
+    }
+  }
+  function romLoad() {
+    if (!state.rom || romBusy || map.getZoom() < 9) return;
+    var b = map.getBounds().pad(0.3);
+    romBusy = true; $('romNote').textContent = 'Romeinse sites laden…';
+    fetch('https://vici.org/geojson.php?bounds=' + [b.getSouth(), b.getWest(), b.getNorth(), b.getEast()].map(function (n) { return n.toFixed(4); }).join(',') +
+      '&zoom=' + Math.min(map.getZoom() + 2, 14))
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        ((j && j.features) || []).forEach(romAdd);
+        $('romNote').textContent = Object.keys(romSeen).length + ' Romeinse sites en wegen geladen in dit gebied.';
+      })
+      .catch(function () { $('romNote').textContent = 'De gegevens van vici.org konden niet geladen worden. De eigen plekken voor Bornem blijven zichtbaar.'; })
+      .then(function () { romBusy = false; });
+  }
+  function romDrawOwn() {
+    romOwn.forEach(function (t) {
+      if (romSeen['own' + t.naam]) return; romSeen['own' + t.naam] = 1;
+      romZone([t.lat, t.lng], 150, function () { romInfo(t.naam, 'Romeinse vondsten (Bornem)', t.waarom, t.bron); });
+    });
+  }
+  function applyRom() {
+    if (state.rom) { romLayer.addTo(map); romDrawOwn(); romLoad(); } else map.removeLayer(romLayer);
+  }
+  $('chkRom').checked = !!state.rom;
+  $('chkRom').addEventListener('change', function () { state.rom = this.checked; applyRom(); saveState(); });
+  map.on('moveend', romLoad);
+
   // ---------- kanshebbers uit plekken.json ----------
   var tipLayer = L.layerGroup();
   function applyTips() { if (state.tips) tipLayer.addTo(map); else map.removeLayer(tipLayer); }
@@ -448,6 +522,8 @@
   $('chkTips').addEventListener('change', function () { state.tips = this.checked; applyTips(); saveState(); });
   fetch('plekken.json', { cache: 'no-cache' }).then(function (r) { return r.json(); }).then(function (list) {
     if (!Array.isArray(list) || !list.length) return;
+    romOwn = list.filter(function (t) { return typeof t.lat === 'number' && /romein/i.test(t.periode || '') && t.kleur === 'rood'; });
+    applyRom();
     list.forEach(function (t) {
       if (typeof t.lat !== 'number' || typeof t.lng !== 'number') return;
       L.marker([t.lat, t.lng], { icon: L.divIcon({ className: '', html: '<div class="tip' + (t.kleur === 'groen' ? ' groen' : t.kleur === 'rood' ? ' rood' : '') + '">★</div>', iconSize: [22, 22], iconAnchor: [11, 11] }) })
@@ -464,7 +540,7 @@
         });
     });
     $('tipsNote').textContent = list.length + ' plekken geladen. Tik op een ster voor de uitleg.';
-  }).catch(function () {});
+  }).catch(function () { applyRom(); });
 })();
 </script>
 </body>
