@@ -43,5 +43,32 @@
   "waarom": "Gehucht met eigen kerk, vermeld sinds 1100 en verlaten na de overstroming van 1825. Lag op een zandrug in de Scheldepolder. Zeven eeuwen bewoning op een plek die nu grotendeels landbouwgrond is.",
   "let_op": "De kerkheuvel (Pastoor-Huveneersheuvel) is een beschermde archeologische site: daar mag je nooit zoeken. Blijf buiten het rode vlak.",
   "bron": "https://inventaris.onroerenderfgoed.be/erfgoedobjecten/140149"
+ },
+ {
+  "kleur": "groen",
+  "naam": "Akker bij oud wegkruispunt, Luipegem",
+  "periode": "Onbekend; kans op Romeins en middeleeuws",
+  "lat": 51.08767,
+  "lng": 4.20656,
+  "waarom": "Uit het kaartbeeld: geploegd perceel op zo'n 80 m van de gele ster. Op Ferraris (1777) komen hier veldwegen samen en staan er net ten zuiden gebouwen. Op het LiDAR-reliëf zie je ten oosten smalle evenwijdige stroken, een oud patroon van strookakkers. Geploegde grond naast een oud gehucht is de beste combinatie in dit blok.",
+  "let_op": "Inschatting op basis van kaartbeelden, niet van vondsten. Vraag toestemming aan de landbouwer."
+ },
+ {
+  "kleur": "groen",
+  "naam": "Verdwenen gebouw op Ferraris",
+  "periode": "18e eeuw of ouder",
+  "lat": 51.08915,
+  "lng": 4.21545,
+  "waarom": "Uit het kaartbeeld: Ferraris (1777) tekent hier een alleenstaand gebouw midden in de velden. Vandaag is het grasland zonder bebouwing. Op het reliëf is geen duidelijke verhoging meer te zien.",
+  "let_op": "De Ferrariskaart ligt tot zo'n 100 m scheef. Leg ze zelf half doorzichtig over het reliëf en zoek het perceel op."
+ },
+ {
+  "kleur": "groen",
+  "naam": "Omgrachte heuvel achter hoeve, Luipegem",
+  "periode": "Onbekend",
+  "lat": 51.09076,
+  "lng": 4.20646,
+  "waarom": "Uit het LiDAR-reliëf: ovale verhoging van ongeveer 25 m met een ringgracht en daarrond een hoekige wal. Ligt in de kern van het gehucht zoals Ferraris het tekent. Kan een oude omgrachte site zijn, maar evengoed 19e-eeuwse tuinaanleg met vijver.",
+  "let_op": "Dit is een privétuin met bomen. Niet zoeken zonder toestemming van de eigenaar. De weide ernaast is realistischer."
  }
 ]

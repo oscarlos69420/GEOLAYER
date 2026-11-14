@@ -31,8 +31,8 @@
 
   .sheet { position:absolute; left:0; right:0; bottom:0; z-index:1100; background:var(--panel); border-top:1px solid var(--line);
     border-radius:16px 16px 0 0; max-height:78%; overflow:auto; padding:14px 16px 26px; transform:translateY(105%);
-    transition:transform .22s ease; box-shadow:0 -8px 30px rgba(0,0,0,.5); }
-  .sheet.open { transform:none; }
+    transition:transform .22s ease, visibility .22s; box-shadow:0 -8px 30px rgba(0,0,0,.5); visibility:hidden; }
+  .sheet.open { transform:none; visibility:visible; }
   @media (min-width:720px) { .sheet { left:auto; right:76px; bottom:24px; width:360px; border-radius:16px; border:1px solid var(--line); } }
   .sheet h2 { margin:0 0 4px; font-size:17px; display:flex; justify-content:space-between; align-items:center; }
   .sheet h3 { margin:16px 0 6px; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--mut); font-weight:600; }
@@ -51,6 +51,7 @@
   .feat small { color:var(--mut); display:block; }
   .feat a { color:var(--acc); }
   .star { color:#ffd84a; }
+  .tip.groen { color:#3ddc6a; }
   .tip { font-size:22px; line-height:22px; color:#ffd84a; text-shadow:0 0 3px #000,0 0 3px #000; }
   .note { color:var(--mut); font-size:12.5px; margin:6px 0 0; }
   .swatch { display:inline-block; width:14px; height:14px; border:2px solid var(--danger); background:rgba(229,72,77,.3); border-radius:3px; vertical-align:-2px; }
@@ -119,6 +120,7 @@
 
   <h3>Kanshebbers</h3>
   <label class="chk erf"><input type="checkbox" id="chkTips"> <span><span class="star">★</span> Plekken om te onderzoeken</span></label>
+  <p class="note"><span class="star">★</span> geel: uit bronnen en inventaris. <span style="color:#3ddc6a">★</span> groen: uit het kaartbeeld (LiDAR en Ferraris).</p>
   <p class="note" id="tipsNote">Nog geen plekken geladen.</p>
 
   <h3>Erfgoed en vindplaatsen</h3>
@@ -208,9 +210,8 @@
   var labelLayers = [
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}',
       { pane: 'labels', maxZoom: 21, maxNativeZoom: 19, attribution: 'Wegen &copy; Esri' }),
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png',
-      { pane: 'labels', maxZoom: 21, maxNativeZoom: 20, subdomains: 'abcd',
-        attribution: 'Namen &copy; <a href="https://carto.com/attributions">CARTO</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' })
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+      { pane: 'labels', maxZoom: 21, maxNativeZoom: 19, attribution: 'Namen &copy; Esri' })
   ];
   if (state.labels === undefined) state.labels = true;
   if (state.tips === undefined) state.tips = true;
@@ -448,7 +449,7 @@
     if (!Array.isArray(list) || !list.length) return;
     list.forEach(function (t) {
       if (typeof t.lat !== 'number' || typeof t.lng !== 'number') return;
-      L.marker([t.lat, t.lng], { icon: L.divIcon({ className: '', html: '<div class="tip">★</div>', iconSize: [22, 22], iconAnchor: [11, 11] }) })
+      L.marker([t.lat, t.lng], { icon: L.divIcon({ className: '', html: '<div class="tip' + (t.kleur === 'groen' ? ' groen' : '') + '">★</div>', iconSize: [22, 22], iconAnchor: [11, 11] }) })
         .addTo(tipLayer)
         .on('click', function (e) {
           L.DomEvent.stopPropagation(e);
