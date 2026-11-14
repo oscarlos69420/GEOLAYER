@@ -50,6 +50,8 @@
   .feat b { display:block; }
   .feat small { color:var(--mut); display:block; }
   .feat a { color:var(--acc); }
+  .star { color:#ffd84a; }
+  .tip { font-size:22px; line-height:22px; color:#ffd84a; text-shadow:0 0 3px #000,0 0 3px #000; }
   .note { color:var(--mut); font-size:12.5px; margin:6px 0 0; }
   .swatch { display:inline-block; width:14px; height:14px; border:2px solid var(--danger); background:rgba(229,72,77,.3); border-radius:3px; vertical-align:-2px; }
 
@@ -96,6 +98,8 @@
     <button data-v="osm">Kaart</button><button data-v="ortho">Luchtfoto</button><button data-v="none">Geen</button>
   </div>
 
+  <label class="chk erf"><input type="checkbox" id="chkLabels"> <span>Wegen en plaatsnamen bovenop tonen</span></label>
+
   <h3>LiDAR-reliëf (DHMV II, 25 cm)</h3>
   <div class="seg" id="segRelief">
     <button data-v="hill">Hillshade</button><button data-v="svf">Skyview</button><button data-v="none">Uit</button>
@@ -112,6 +116,10 @@
   <div class="row">Dekking <input type="range" id="opHist" min="0" max="100"></div>
 
   <p class="note">Ferraris toont dorpen, kerken, hoeves, molens en wegen van rond 1777. De Atlas der Buurtwegen toont elk oud pad en elke voetweg.</p>
+
+  <h3>Kanshebbers</h3>
+  <label class="chk erf"><input type="checkbox" id="chkTips"> <span><span class="star">★</span> Plekken om te onderzoeken</span></label>
+  <p class="note" id="tipsNote">Nog geen plekken geladen.</p>
 
   <h3>Erfgoed en vindplaatsen</h3>
   <label class="chk erf"><input type="checkbox" data-erf="arEl"> <span>Archeologische vindplaatsen</span></label>
@@ -168,7 +176,7 @@
   var map = L.map('map', { zoomControl: false, maxZoom: 21, minZoom: 7 }).setView([state.lat, state.lng], state.z);
   L.control.scale({ imperial: false, position: 'topleft' }).addTo(map);
 
-  ['base', 'hist', 'relief', 'erf', 'zones'].forEach(function (n, i) {
+  ['base', 'hist', 'relief', 'labels', 'erf', 'zones'].forEach(function (n, i) {
     map.createPane(n).style.zIndex = 200 + i * 10;
   });
 
@@ -197,6 +205,17 @@
       popp: wmts('HISTCART', 'popp', 'hist')
     }
   };
+  var labelLayers = [
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}',
+      { pane: 'labels', maxZoom: 21, maxNativeZoom: 19, attribution: 'Wegen &copy; Esri' }),
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png',
+      { pane: 'labels', maxZoom: 21, maxNativeZoom: 20, subdomains: 'abcd',
+        attribution: 'Namen &copy; <a href="https://carto.com/attributions">CARTO</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' })
+  ];
+  if (state.labels === undefined) state.labels = true;
+  if (state.tips === undefined) state.tips = true;
+  function applyLabels() { labelLayers.forEach(function (l) { if (state.labels) l.addTo(map); else map.removeLayer(l); }); }
+
   var MERC = 'https://www.mercator.vlaanderen.be/raadpleegdienstenmercatorpubliek/ows';
   var OE = '&copy; <a href="https://geo.onroerenderfgoed.be">Onroerend Erfgoed</a>';
   var erfNames = { arEl: 'lu:lu_wet_ar_el_pub', arGeh: 'lu:lu_wet_ar_geh_pub', bkEl: 'lu:lu_wet_bk_el_pub' };
@@ -242,6 +261,8 @@
   $('opHist').addEventListener('input', function () { state.opHist = +this.value; apply('hist'); saveState(); });
   $('chkArch').checked = state.arch; applyArch();
   $('chkArch').addEventListener('change', function () { state.arch = this.checked; applyArch(); saveState(); });
+  $('chkLabels').checked = state.labels; applyLabels();
+  $('chkLabels').addEventListener('change', function () { state.labels = this.checked; applyLabels(); saveState(); });
   Array.prototype.forEach.call(document.querySelectorAll('[data-erf]'), function (c) {
     var k = c.dataset.erf;
     c.checked = !!state.erf[k];
@@ -327,23 +348,31 @@
     follow = true; $('bGps').classList.add('on');
     if (meMarker) map.setView(meMarker.getLatLng(), Math.max(map.getZoom(), 17));
     if (watchId !== null) return;
-    watchId = navigator.geolocation.watchPosition(function (p) {
-      var ll = L.latLng(p.coords.latitude, p.coords.longitude);
-      if (!meMarker) {
-        meMarker = L.marker(ll, { icon: L.divIcon({ className: '', html: '<div class="me"></div>', iconSize: [16, 16], iconAnchor: [8, 8] }), interactive: false, zIndexOffset: 1000 }).addTo(map);
-        meAcc = L.circle(ll, { radius: p.coords.accuracy, color: '#2f8cff', weight: 1, fillOpacity: 0.08, interactive: false }).addTo(map);
-        map.setView(ll, Math.max(map.getZoom(), 17));
-      } else {
-        meMarker.setLatLng(ll); meAcc.setLatLng(ll).setRadius(p.coords.accuracy);
-        if (follow) map.panTo(ll);
-      }
-    }, function (err) {
+    toast('Locatie zoeken…');
+    startWatch(true);
+  });
+  function onPos(p) {
+    var ll = L.latLng(p.coords.latitude, p.coords.longitude);
+    if (!meMarker) {
+      meMarker = L.marker(ll, { icon: L.divIcon({ className: '', html: '<div class="me"></div>', iconSize: [16, 16], iconAnchor: [8, 8] }), interactive: false, zIndexOffset: 1000 }).addTo(map);
+      meAcc = L.circle(ll, { radius: p.coords.accuracy, color: '#2f8cff', weight: 1, fillOpacity: 0.08, interactive: false }).addTo(map);
+      map.setView(ll, Math.max(map.getZoom(), 16));
+      toast('Locatie gevonden (nauwkeurig tot ' + Math.round(p.coords.accuracy) + ' m).');
+    } else {
+      meMarker.setLatLng(ll); meAcc.setLatLng(ll).setRadius(p.coords.accuracy);
+      if (follow) map.panTo(ll);
+    }
+  }
+  function startWatch(high) {
+    if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+    watchId = navigator.geolocation.watchPosition(onPos, function (err) {
+      if (err.code !== 1 && high) { startWatch(false); return; }   // GPS lukt niet: probeer wifi/netwerk
       stopGps();
       toast(err.code === 1
-        ? 'Locatie geweigerd. Geef de browser toestemming, en open de kaart via een https-adres (niet als los bestand).'
-        : 'Geen locatie gevonden. Probeer het buiten opnieuw.');
-    }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 });
-  });
+        ? 'Locatie geweigerd. Sta locatie toe voor deze site in je browserinstellingen en voor je browser in de instellingen van je toestel.'
+        : 'Je toestel geeft geen locatie door (code ' + err.code + '). Staat locatie aan op je toestel?');
+    }, { enableHighAccuracy: high, maximumAge: 5000, timeout: high ? 15000 : 30000 });
+  }
   map.on('dragstart', function () { if (follow) { follow = false; $('bGps').classList.remove('on'); } });
 
   // ---------- waypoints ----------
@@ -409,6 +438,30 @@
   });
 
   drawWp();
+
+  // ---------- kanshebbers uit plekken.json ----------
+  var tipLayer = L.layerGroup();
+  function applyTips() { if (state.tips) tipLayer.addTo(map); else map.removeLayer(tipLayer); }
+  $('chkTips').checked = state.tips; applyTips();
+  $('chkTips').addEventListener('change', function () { state.tips = this.checked; applyTips(); saveState(); });
+  fetch('plekken.json', { cache: 'no-cache' }).then(function (r) { return r.json(); }).then(function (list) {
+    if (!Array.isArray(list) || !list.length) return;
+    list.forEach(function (t) {
+      if (typeof t.lat !== 'number' || typeof t.lng !== 'number') return;
+      L.marker([t.lat, t.lng], { icon: L.divIcon({ className: '', html: '<div class="tip">★</div>', iconSize: [22, 22], iconAnchor: [11, 11] }) })
+        .addTo(tipLayer)
+        .on('click', function (e) {
+          L.DomEvent.stopPropagation(e);
+          closeSheets();
+          $('infoBody').innerHTML = '<div class="feat"><b>' + esc(t.naam || 'Plek') + '</b>' +
+            (t.waarom ? '<small>' + esc(t.waarom) + '</small>' : '') +
+            (t.let_op ? '<small style="color:var(--danger)">' + esc(t.let_op) + '</small>' : '') +
+            (t.bron ? '<a href="' + esc(t.bron) + '" target="_blank" rel="noopener">Bron</a>' : '') + '</div>';
+          $('sInfo').classList.add('open');
+        });
+    });
+    $('tipsNote').textContent = list.length + ' plekken geladen. Tik op een ster voor de uitleg.';
+  }).catch(function () {});
 })();
 </script>
 </body>
