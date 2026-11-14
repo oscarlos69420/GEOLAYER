@@ -112,5 +112,35 @@
   "waarom": "Gevonden bij Brandheide (CAI 105797): een spoor dat mogelijk een silo (voorraadkuil) is. Niet gedateerd.",
   "let_op": "De ster staat op de straat, niet op de exacte vindplaats.",
   "bron": "https://loket.onroerenderfgoed.be/archeologie/notas/notas/1620/bijlagen/8064"
+ },
+ {
+  "kleur": "rood",
+  "naam": "Mariekerke: Romeins aardewerk op kruispunt",
+  "periode": "Late ijzertijd, Romeins, Karolingisch",
+  "lat": 51.0664,
+  "lng": 4.1925,
+  "waarom": "Gevonden bij veldkartering (CAI 101443) aan het kruispunt Paardenstraat-Meivisstraat: aardewerk uit de late ijzertijd, de Romeinse tijd en de Karolingische periode. Ligt op de stuifzandrug langs de Schelde, waar ook oudere vondsten bekend zijn.",
+  "let_op": "De ster staat op het kruispunt; de vondsten komen van de akkers errond.",
+  "bron": "https://loket.onroerenderfgoed.be/archeologie/notas/notas/19909/bijlagen/85223"
+ },
+ {
+  "kleur": "rood",
+  "naam": "Boomstraat: Romeinse dakpannen",
+  "periode": "Romeins",
+  "lat": 51.0984,
+  "lng": 4.23379,
+  "waarom": "Gevonden bij graafwerken in de Boomstraat: Romeinse dakpannen. Ook in de fundering van de kerk van Bornem zitten Romeinse dakpannen. Wijst op een Romeins gebouw in of bij de dorpskern.",
+  "let_op": "Bebouwde dorpskern, niet geschikt om te zoeken. Wel een aanwijzing voor de akkers aan de rand van het centrum.",
+  "bron": "https://oar.onroerenderfgoed.be/publicaties/ROEV/3292/ROEV3292-001.pdf"
+ },
+ {
+  "kleur": "rood",
+  "naam": "Het Sas: Romeins heiligdom (1781)",
+  "periode": "Romeins (2e eeuw)",
+  "lat": 51.11808,
+  "lng": 4.2151,
+  "waarom": "Gevonden in 1781 bij de bouw van een sluis: stukken van een bronzen beeld (hoofd, arm, been), een bronzen Jupiterbeeldje, een helmpje, munten van keizer Commodus en een votiefsteen met inscriptie. Geïnterpreteerd als Gallo-Romeins heiligdom bij de samenvloeiing van Schelde en Oude Schelde. De voorwerpen zijn verloren.",
+  "let_op": "De exacte vindplaats is betwist: mogelijk ging het om een sluis in de Spierbroekpolder. Polder en dijken: check eigenaar en natuurstatuut.",
+  "bron": "https://oar.onroerenderfgoed.be/publicaties/ROEV/3292/ROEV3292-001.pdf"
  }
 ]
