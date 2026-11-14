@@ -1,21 +1,23 @@
 [
  {
-  "naam": "Akkers rond Luipegem",
+  "naam": "Luipegem: veldprospectie",
   "periode": "Romeins, laat-Romeins, vroege en volle middeleeuwen",
   "lat": 51.08731,
   "lng": 4.20504,
-  "waarom": "Bij een veldprospectie is hier aardewerk gevonden uit de Romeinse tijd, de laat-Romeinse tijd en de vroege en volle middeleeuwen (CAI 101450). Beste kans in Bornem op Romeins materiaal. Zoek op de akkers rond het gehucht, vooral de hogere, drogere percelen.",
+  "waarom": "Gevonden bij veldprospectie (CAI 101450): vuurstenen werktuigen uit de steentijd en aardewerk uit de metaaltijden, de Romeinse en laat-Romeinse tijd en de vroege en volle middeleeuwen. Beste kans in Bornem op Romeins materiaal.",
   "let_op": "De ster staat op het gehucht, niet op een exact perceel.",
-  "bron": "https://loket.onroerenderfgoed.be/archeologie/notas/notas/1620/bijlagen/8064"
+  "bron": "https://loket.onroerenderfgoed.be/archeologie/notas/notas/1620/bijlagen/8064",
+  "kleur": "rood"
  },
  {
-  "naam": "Branstsedreef",
+  "naam": "Branstsedreef: detectorvondsten",
   "periode": "Nieuwe tijd (17e eeuw)",
   "lat": 51.08132,
   "lng": 4.21001,
-  "waarom": "Hier zijn al detectorvondsten gemeld: een munt uit de regering van Karel II van Spanje (1665-1700) en ongedateerde loden en metalen voorwerpen (CAI 208475). Een oude dreef waar al eeuwen volk passeert.",
+  "waarom": "Gevonden met metaaldetector (CAI 208475): een munt uit de regering van Karel II van Spanje (1665-1700), plus ongedateerde loden en metalen voorwerpen.",
   "let_op": "De ster staat op de straat, niet op een exact perceel.",
-  "bron": "https://loket.onroerenderfgoed.be/archeologie/notas/notas/1620/bijlagen/8064"
+  "bron": "https://loket.onroerenderfgoed.be/archeologie/notas/notas/1620/bijlagen/8064",
+  "kleur": "rood"
  },
  {
   "naam": "Molenplaats Heymolen / Stenen Molen",
@@ -70,5 +72,45 @@
   "lng": 4.20646,
   "waarom": "Uit het LiDAR-reliëf: ovale verhoging van ongeveer 25 m met een ringgracht en daarrond een hoekige wal. Ligt in de kern van het gehucht zoals Ferraris het tekent. Kan een oude omgrachte site zijn, maar evengoed 19e-eeuwse tuinaanleg met vijver.",
   "let_op": "Dit is een privétuin met bomen. Niet zoeken zonder toestemming van de eigenaar. De weide ernaast is realistischer."
+ },
+ {
+  "kleur": "rood",
+  "naam": "Kloosterstraat: kuil met Romeins dakpanfragment",
+  "periode": "IJzertijd, Romeins, volle middeleeuwen",
+  "lat": 51.09423,
+  "lng": 4.22514,
+  "waarom": "Gevonden bij onderzoek (CAI 210655): een kuil met een fragment van een Romeinse dakpan (tegula), aardewerk uit de ijzertijd en de volle middeleeuwen, ongedateerd handgevormd aardewerk en 19e-eeuwse grachten. De kuil zelf is waarschijnlijk jonger dan Romeins.",
+  "let_op": "De ster staat op de straat, niet op de exacte vindplaats.",
+  "bron": "https://loket.onroerenderfgoed.be/archeologie/notas/notas/1620/bijlagen/8064"
+ },
+ {
+  "kleur": "rood",
+  "naam": "Doregem: veldprospectie",
+  "periode": "Steentijd, bronstijd",
+  "lat": 51.09139,
+  "lng": 4.24856,
+  "waarom": "Gevonden bij veldprospectie (CAI 101451): vuursteen uit de steentijd en bronstijd en aardewerk uit de bronstijd. De 17e-eeuwse Kluishoeve staat hier mogelijk op een Frankisch hof.",
+  "let_op": "Geen metaalvondsten gemeld. De ster staat op de straat, niet op de exacte vindplaats.",
+  "bron": "https://loket.onroerenderfgoed.be/archeologie/notas/notas/1620/bijlagen/8064"
+ },
+ {
+  "kleur": "rood",
+  "naam": "Breeven: twee vuurstenen schrabbers",
+  "periode": "Midden-paleolithicum",
+  "lat": 51.08972,
+  "lng": 4.24861,
+  "waarom": "Gevonden (CAI 105805): twee schrabbers uit het Moustérien. Toont hoe oud de bewoning hier is, maar zegt weinig over metaalvondsten.",
+  "let_op": "Ligging onzeker: er is een Breevendreef en een Breevenstraat. De ster staat op de Breevendreef.",
+  "bron": "https://loket.onroerenderfgoed.be/archeologie/notas/notas/1620/bijlagen/8064"
+ },
+ {
+  "kleur": "rood",
+  "naam": "Zavelberg: mogelijke silo",
+  "periode": "Ongedateerd",
+  "lat": 51.09201,
+  "lng": 4.21913,
+  "waarom": "Gevonden bij Brandheide (CAI 105797): een spoor dat mogelijk een silo (voorraadkuil) is. Niet gedateerd.",
+  "let_op": "De ster staat op de straat, niet op de exacte vindplaats.",
+  "bron": "https://loket.onroerenderfgoed.be/archeologie/notas/notas/1620/bijlagen/8064"
  }
 ]

@@ -52,6 +52,7 @@
   .feat a { color:var(--acc); }
   .star { color:#ffd84a; }
   .tip.groen { color:#3ddc6a; }
+  .tip.rood { color:#ff5a5f; }
   .tip { font-size:22px; line-height:22px; color:#ffd84a; text-shadow:0 0 3px #000,0 0 3px #000; }
   .note { color:var(--mut); font-size:12.5px; margin:6px 0 0; }
   .swatch { display:inline-block; width:14px; height:14px; border:2px solid var(--danger); background:rgba(229,72,77,.3); border-radius:3px; vertical-align:-2px; }
@@ -120,7 +121,7 @@
 
   <h3>Kanshebbers</h3>
   <label class="chk erf"><input type="checkbox" id="chkTips"> <span><span class="star">★</span> Plekken om te onderzoeken</span></label>
-  <p class="note"><span class="star">★</span> geel: uit bronnen en inventaris. <span style="color:#3ddc6a">★</span> groen: uit het kaartbeeld (LiDAR en Ferraris).</p>
+  <p class="note"><span style="color:#ff5a5f">★</span> rood: hier is al iets gevonden. <span class="star">★</span> geel: historische plek uit bronnen. <span style="color:#3ddc6a">★</span> groen: uit het kaartbeeld (LiDAR en Ferraris).</p>
   <p class="note" id="tipsNote">Nog geen plekken geladen.</p>
 
   <h3>Erfgoed en vindplaatsen</h3>
@@ -449,7 +450,7 @@
     if (!Array.isArray(list) || !list.length) return;
     list.forEach(function (t) {
       if (typeof t.lat !== 'number' || typeof t.lng !== 'number') return;
-      L.marker([t.lat, t.lng], { icon: L.divIcon({ className: '', html: '<div class="tip' + (t.kleur === 'groen' ? ' groen' : '') + '">★</div>', iconSize: [22, 22], iconAnchor: [11, 11] }) })
+      L.marker([t.lat, t.lng], { icon: L.divIcon({ className: '', html: '<div class="tip' + (t.kleur === 'groen' ? ' groen' : t.kleur === 'rood' ? ' rood' : '') + '">★</div>', iconSize: [22, 22], iconAnchor: [11, 11] }) })
         .addTo(tipLayer)
         .on('click', function (e) {
           L.DomEvent.stopPropagation(e);
