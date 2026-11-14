@@ -454,6 +454,7 @@
           L.DomEvent.stopPropagation(e);
           closeSheets();
           $('infoBody').innerHTML = '<div class="feat"><b>' + esc(t.naam || 'Plek') + '</b>' +
+            (t.periode ? '<small style="color:var(--acc)">' + esc(t.periode) + '</small>' : '') +
             (t.waarom ? '<small>' + esc(t.waarom) + '</small>' : '') +
             (t.let_op ? '<small style="color:var(--danger)">' + esc(t.let_op) + '</small>' : '') +
             (t.bron ? '<a href="' + esc(t.bron) + '" target="_blank" rel="noopener">Bron</a>' : '') + '</div>';

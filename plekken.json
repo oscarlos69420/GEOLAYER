@@ -1,1 +1,47 @@
-[]
+[
+ {
+  "naam": "Akkers rond Luipegem",
+  "periode": "Romeins, laat-Romeins, vroege en volle middeleeuwen",
+  "lat": 51.08731,
+  "lng": 4.20504,
+  "waarom": "Bij een veldprospectie is hier aardewerk gevonden uit de Romeinse tijd, de laat-Romeinse tijd en de vroege en volle middeleeuwen (CAI 101450). Beste kans in Bornem op Romeins materiaal. Zoek op de akkers rond het gehucht, vooral de hogere, drogere percelen.",
+  "let_op": "De ster staat op het gehucht, niet op een exact perceel.",
+  "bron": "https://loket.onroerenderfgoed.be/archeologie/notas/notas/1620/bijlagen/8064"
+ },
+ {
+  "naam": "Branstsedreef",
+  "periode": "Nieuwe tijd (17e eeuw)",
+  "lat": 51.08132,
+  "lng": 4.21001,
+  "waarom": "Hier zijn al detectorvondsten gemeld: een munt uit de regering van Karel II van Spanje (1665-1700) en ongedateerde loden en metalen voorwerpen (CAI 208475). Een oude dreef waar al eeuwen volk passeert.",
+  "let_op": "De ster staat op de straat, niet op een exact perceel.",
+  "bron": "https://loket.onroerenderfgoed.be/archeologie/notas/notas/1620/bijlagen/8064"
+ },
+ {
+  "naam": "Molenplaats Heymolen / Stenen Molen",
+  "periode": "Late middeleeuwen tot 20e eeuw",
+  "lat": 51.09073,
+  "lng": 4.23024,
+  "waarom": "Op deze plek stond al in 1318 een houten molen (afgebrand in 1583), later de Stenen Molen (gesloopt 1940-41). Rond molens werd eeuwenlang betaald en gehandeld. Zoek op de akkers van het Molenveld errond.",
+  "let_op": "De ster staat op de Steenmolenweg; zoek de molenplaats zelf op de Ferrariskaart.",
+  "bron": "https://loket.onroerenderfgoed.be/archeologie/notas/notas/1620/bijlagen/8064"
+ },
+ {
+  "naam": "Omgeving motte Den Dulft",
+  "periode": "Volle middeleeuwen (11e eeuw)",
+  "lat": 51.09448,
+  "lng": 4.23032,
+  "waarom": "11e-eeuwse kasteelheuvel van de eerste heren van Bornem, met neerhof en latere pachthoeve (in 1326 vernield). De velden rond zo'n machtscentrum zijn kansrijk voor middeleeuwse munten en gespen.",
+  "let_op": "Niet op de motte of in het kasteelpark zelf: dat is privé en afgebakend erfgoed. Alleen akkers errond, met toestemming.",
+  "bron": "https://inventaris.onroerenderfgoed.be/erfgoedobjecten/1908"
+ },
+ {
+  "naam": "Verdwenen dorp Nattenhaasdonk",
+  "periode": "Volle middeleeuwen tot 1825",
+  "lat": 51.11344,
+  "lng": 4.28218,
+  "waarom": "Gehucht met eigen kerk, vermeld sinds 1100 en verlaten na de overstroming van 1825. Lag op een zandrug in de Scheldepolder. Zeven eeuwen bewoning op een plek die nu grotendeels landbouwgrond is.",
+  "let_op": "De kerkheuvel (Pastoor-Huveneersheuvel) is een beschermde archeologische site: daar mag je nooit zoeken. Blijf buiten het rode vlak.",
+  "bron": "https://inventaris.onroerenderfgoed.be/erfgoedobjecten/140149"
+ }
+]
